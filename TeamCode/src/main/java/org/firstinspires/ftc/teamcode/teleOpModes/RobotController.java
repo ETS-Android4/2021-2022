@@ -43,21 +43,37 @@ public class RobotController extends LinearOpMode {
 
     public void ControlDrivetrain()
     {
-        // Set power
-        motorPower = -this.gamepad1.left_stick_y;
+        // Get motor power
+        motorPower = 0;
+        if(gamepad1.right_bumper)
+            motorPower = 1;
+        else if(gamepad1.left_bumper)
+            motorPower = -1;
+
+        // Get steering input
         rawSteeringInput = this.gamepad1.left_stick_x;
             
         // Convert steering input to multipliers for the left and right motor
         double leftMultiplier = 1 - rawSteeringInput;
         double rightMultiplier = 1 + rawSteeringInput;
-            
-        // Apply power (one is inverted)
-        leftMotor.setPower(-(motorPower * leftMultiplier));
-        rightMotor.setPower(motorPower * rightMultiplier);
-            
+
+        // Get power
+        double lMotorPower = -(motorPower * leftMultiplier);
+        double rMotorPower = motorPower * rightMultiplier;
+
+        // Set raw telemetry
         telemetry.addData("Raw Power Input", motorPower);
         telemetry.addData("Raw Steering Input", rawSteeringInput);
-            
+
+        DriveDrivetrain(lMotorPower, rMotorPower);
+    }
+
+    public void DriveDrivetrain(double l, double r)
+    {
+        // Apply power (one is inverted)
+        leftMotor.setPower(l);
+        rightMotor.setPower(r);
+
         // Set motor power telemetry
         telemetry.addData("Left Motor Power", leftMotor.getPower());
         telemetry.addData("Right Motor Power", rightMotor.getPower());

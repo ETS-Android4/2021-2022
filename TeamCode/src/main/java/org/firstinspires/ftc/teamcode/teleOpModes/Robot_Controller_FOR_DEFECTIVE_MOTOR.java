@@ -33,29 +33,18 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Robot_Controller_FOR_DEFECTIVE_MOTOR extends RobotController {
 
     @Override
-    public void ControlDrivetrain()
+    public void DriveDrivetrain(double l, double r)
     {
-        // Set power
-        motorPower = -this.gamepad1.left_stick_y;
-        rawSteeringInput = this.gamepad1.left_stick_x;
-            
         // Set motor power on the right motor to only a percentage of it's power
         double rightMotorCompensation = 0.95f;
-        double rightMotorPower = motorPower * rightMotorCompensation;
-        
-        // Convert steering input to multipliers for the left and right motor
-        double leftMultiplier = 1 + rawSteeringInput;
-        double rightMultiplier = 1 - rawSteeringInput;
-        
+        r *= rightMotorCompensation;
+
         // Apply power (one is inverted)
-        leftMotor.setPower(-(motorPower * leftMultiplier));
-        rightMotor.setPower(rightMotorPower * rightMultiplier);
-            
-        telemetry.addData("Raw Power Input", motorPower);
-        telemetry.addData("Raw Steering Input", rawSteeringInput);
-            
+        leftMotor.setPower(l);
+        rightMotor.setPower(r);
+
         // Set motor power telemetry
-        telemetry.addData("Left Motor Power (UNCHANGED)", leftMotor.getPower());
-        telemetry.addData("Right Motor Power (COMPENSATED)", rightMotor.getPower());
+        telemetry.addData("Left Motor Power", leftMotor.getPower());
+        telemetry.addData("Right Motor Power", rightMotor.getPower());
     }
 }
