@@ -45,9 +45,9 @@ public class RobotController extends LinearOpMode {
     {
         // Get motor power
         motorPower = 0;
-        if(gamepad1.right_bumper)
+        if(gamepad1.right_trigger > 0.9)
             motorPower = 1;
-        else if(gamepad1.left_bumper)
+        else if(gamepad1.left_trigger > 0.9)
             motorPower = -1;
 
         // Get steering input
