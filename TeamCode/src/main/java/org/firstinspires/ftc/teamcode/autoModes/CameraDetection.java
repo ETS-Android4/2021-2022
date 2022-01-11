@@ -50,7 +50,9 @@ import org.openftc.easyopencv.*;
 */
 @Autonomous
 public class CameraDetection extends LinearOpMode {
-    
+
+    // Tracking pipeline for the shipping detection
+    DetectShipping shippingDetection = new DetectShipping();
     // Self-explanatory
     OpenCvCamera camera;
     public void InitializeCamera() {
@@ -67,6 +69,7 @@ public class CameraDetection extends LinearOpMode {
             {
                 // Start streaming
                 StreamCamera(320, 240, camera);
+                camera.setPipeline(shippingDetection);
             }
             @Override
             public void onError(int errorCode)
@@ -98,6 +101,11 @@ public class CameraDetection extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.addData("Status", "Running");
+
+            double[] coordinates = shippingDetection.ShippingElementCoordinates();
+            double distance = shippingDetection.ShippingElementDistance();
+            telemetry.addData("Shipping Coordinates", "(" + coordinates[0] + ", " + coordinates[1] + ")");
+            telemetry.addData("Shipping Distance", distance);
             telemetry.update();
         }
     }
