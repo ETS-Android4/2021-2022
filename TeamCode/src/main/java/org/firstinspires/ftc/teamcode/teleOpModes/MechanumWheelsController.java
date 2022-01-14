@@ -7,6 +7,7 @@ package org.firstinspires.ftc.teamcode.teleOpModes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp
 public class MechanumWheelsController extends LinearOpMode {
@@ -17,6 +18,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public DcMotor bottomLeft;
     public DcMotor bottomRight;
 
+    // Motor states
     public enum MotorState{
         FORWARD,
         BACKWARD,
@@ -24,6 +26,10 @@ public class MechanumWheelsController extends LinearOpMode {
     }
     public MotorState rightSlantState = MotorState.DISABLED;
     public MotorState leftSlantState = MotorState.DISABLED;
+
+    // Servos for grabber
+    public Servo leftGrabber;
+    public Servo rightGrabber;
 
     double MovementTheta()
     {
@@ -55,7 +61,6 @@ public class MechanumWheelsController extends LinearOpMode {
         }
 
         telemetry.addData("Theta", theta);
-        telemetry.update();
         return theta;
     }
 
@@ -67,8 +72,15 @@ public class MechanumWheelsController extends LinearOpMode {
         bottomLeft = hardwareMap.get(DcMotor.class, "lbMotor");
         bottomRight = hardwareMap.get(DcMotor.class, "rbMotor");
 
+        leftGrabber = hardwareMap.get(Servo.class, "lGrab");
+        rightGrabber = hardwareMap.get(Servo.class, "rGrab");
+
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
+        leftGrabber.setDirection(Servo.Direction.REVERSE);
+        leftGrabber.setPosition(0);
+        rightGrabber.setPosition(0);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -79,10 +91,26 @@ public class MechanumWheelsController extends LinearOpMode {
             double theta = MovementTheta();
 
             // control steering or driving
-            if(gamepad1.left_bumper)
-                Steer((float) theta);
-            else
-                Drive((float) theta);
+            if(!Double.isNaN(theta))
+            {
+                if(gamepad1.left_bumper)
+                    Steer((float) theta);
+                else
+                    Drive((float) theta);
+            }
+
+            // Control grabber with right trigger
+            float grabberPower = gamepad1.right_trigger;
+            leftGrabber.setPosition(grabberPower);
+            rightGrabber.setPosition(grabberPower);
+            telemetry.addData("Grabber Target", grabberPower);
+
+            // Motor power telemetry
+            telemetry.addData("TRP", topRight.getPower());
+            telemetry.addData("BRP", bottomRight.getPower());
+            telemetry.addData("TLP", topLeft.getPower());
+            telemetry.addData("BLP", bottomLeft.getPower());
+            telemetry.update();
         }
     }
 
@@ -98,12 +126,12 @@ public class MechanumWheelsController extends LinearOpMode {
             rightSlantState = MotorState.DISABLED;
 
         // Left slant
-        if(theta >= 90 && theta <= 180)
-            rightSlantState = MotorState.FORWARD;
-        else if(theta >= 270 && theta <= 360)
-            rightSlantState = MotorState.BACKWARD;
+        if(theta >= 0 && theta <= 90)
+            leftSlantState = MotorState.FORWARD;
+        else if(theta >= 180 && theta <= 270)
+            leftSlantState = MotorState.BACKWARD;
         else
-            rightSlantState = MotorState.DISABLED;
+            leftSlantState = MotorState.DISABLED;
 
         // Configure motor power
         float rightSlantPower = rightSlantState == MotorState.FORWARD ? 1 : -1;
@@ -113,6 +141,9 @@ public class MechanumWheelsController extends LinearOpMode {
         float leftSlantPower = leftSlantState == MotorState.FORWARD ? 1 : -1;
         if(leftSlantState == MotorState.DISABLED)
             leftSlantPower = 0;
+
+        telemetry.addData("Right Slant State", rightSlantState.toString());
+        telemetry.addData("Left Slant State", leftSlantState.toString());
 
         // Set power
         topRight.setPower(rightSlantPower);

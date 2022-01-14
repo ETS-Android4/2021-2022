@@ -16,3 +16,7 @@ Robot1:
 - DcMotor (port 0) ("lMotor")
 - DcMotor (port 1) ("rMotor")
 - DcMotor (port 3) ("cMotor")
+
+Robot2:
+- DcMotors (goBuilda) in every port
+- Servos for grabbers in ports 0 and 5
