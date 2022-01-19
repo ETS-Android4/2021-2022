@@ -30,6 +30,9 @@ public class MechanumWheelsController extends LinearOpMode {
     // Servos for grabber
     public Servo leftGrabber;
     public Servo rightGrabber;
+    // Create offset for servos so they can be reset correctly
+    public float leftGOffset = 0.12f;
+    public float rightGOffset = 0;
 
     double MovementTheta()
     {
@@ -79,8 +82,8 @@ public class MechanumWheelsController extends LinearOpMode {
         telemetry.update();
 
         leftGrabber.setDirection(Servo.Direction.REVERSE);
-        leftGrabber.setPosition(0);
-        rightGrabber.setPosition(0);
+        leftGrabber.setPosition(leftGOffset);
+        rightGrabber.setPosition(rightGOffset);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -101,8 +104,8 @@ public class MechanumWheelsController extends LinearOpMode {
 
             // Control grabber with right trigger
             float grabberPower = gamepad1.right_trigger;
-            leftGrabber.setPosition(grabberPower);
-            rightGrabber.setPosition(grabberPower);
+            leftGrabber.setPosition(grabberPower + leftGOffset);
+            rightGrabber.setPosition(grabberPower + rightGOffset);
             telemetry.addData("Grabber Target", grabberPower);
 
             // Motor power telemetry
@@ -118,17 +121,17 @@ public class MechanumWheelsController extends LinearOpMode {
     {
         // Configure slant states
         // Right slant
-        if(theta >= 90 && theta <= 180)
+        if(theta >= 85 && theta <= 185)
             rightSlantState = MotorState.FORWARD;
-        else if(theta >= 270 && theta <= 360)
+        else if(theta >= 265 && theta <= 360)
             rightSlantState = MotorState.BACKWARD;
         else
             rightSlantState = MotorState.DISABLED;
 
         // Left slant
-        if(theta >= 0 && theta <= 90)
+        if(theta >= 0 && theta <= 95)
             leftSlantState = MotorState.FORWARD;
-        else if(theta >= 180 && theta <= 270)
+        else if(theta >= 175 && theta <= 275)
             leftSlantState = MotorState.BACKWARD;
         else
             leftSlantState = MotorState.DISABLED;
