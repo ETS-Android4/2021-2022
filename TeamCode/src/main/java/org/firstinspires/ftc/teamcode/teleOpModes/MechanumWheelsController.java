@@ -37,7 +37,7 @@ public class MechanumWheelsController extends LinearOpMode {
     double MovementTheta()
     {
         float leftJoystickX = gamepad1.left_stick_x;
-        float leftJoystickY = gamepad1.left_stick_y;
+        float leftJoystickY = -gamepad1.left_stick_y;
         telemetry.addData("Move X", leftJoystickX);
         telemetry.addData("Move Y", leftJoystickY);
 
@@ -100,6 +100,12 @@ public class MechanumWheelsController extends LinearOpMode {
                     Steer((float) theta);
                 else
                     Drive((float) theta);
+            }else{
+                // Set power
+                topRight.setPower(0);
+                bottomLeft.setPower(0);
+                topLeft.setPower(0);
+                bottomRight.setPower(0);
             }
 
             // Control grabber with right trigger
@@ -150,9 +156,9 @@ public class MechanumWheelsController extends LinearOpMode {
 
         // Set power
         topRight.setPower(rightSlantPower);
-        bottomLeft.setPower(rightSlantPower);
+        bottomLeft.setPower(-rightSlantPower);
         topLeft.setPower(leftSlantPower);
-        bottomRight.setPower(leftSlantPower);
+        bottomRight.setPower(-leftSlantPower);
     }
 
     void Steer(float theta)
