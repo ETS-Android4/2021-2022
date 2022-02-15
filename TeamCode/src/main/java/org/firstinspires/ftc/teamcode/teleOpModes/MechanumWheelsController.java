@@ -4,10 +4,12 @@
 
 package org.firstinspires.ftc.teamcode.teleOpModes;
 
+import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @TeleOp
 public class MechanumWheelsController extends LinearOpMode {
@@ -17,6 +19,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public DcMotor topRight;
     public DcMotor bottomLeft;
     public DcMotor bottomRight;
+    public DcMotor slider; // Slider
 
     // Motor states
     public enum MotorState{
@@ -33,6 +36,13 @@ public class MechanumWheelsController extends LinearOpMode {
     // Create offset for servos so they can be reset correctly
     public float leftGOffset = 0.12f;
     public float rightGOffset = 0;
+
+    // Touch sensor
+    public RevTouchSensor bottomLimit;
+
+    // Speed
+    public float speed = 1;
+    public float sliderSpeed = 0.7f;
 
     double MovementTheta()
     {
@@ -74,16 +84,31 @@ public class MechanumWheelsController extends LinearOpMode {
         topRight = hardwareMap.get(DcMotor.class, "rtMotor");
         bottomLeft = hardwareMap.get(DcMotor.class, "lbMotor");
         bottomRight = hardwareMap.get(DcMotor.class, "rbMotor");
+        slider = hardwareMap.get(DcMotor.class, "slider");
 
+        // Get digital touch sensor
+        bottomLimit = hardwareMap.get(RevTouchSensor.class, "bLimit");
+
+        // Get servos
         leftGrabber = hardwareMap.get(Servo.class, "lGrab");
         rightGrabber = hardwareMap.get(Servo.class, "rGrab");
-
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
 
         leftGrabber.setDirection(Servo.Direction.REVERSE);
         leftGrabber.setPosition(leftGOffset);
         rightGrabber.setPosition(rightGOffset);
+
+        // Initialize slider at bottom
+        while(!bottomLimit.isPressed())
+        {
+            telemetry.addData("Status", "Initializing");
+            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
+            telemetry.update();
+            slider.setPower(-sliderSpeed);
+        }
+        slider.setPower(0);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -92,6 +117,8 @@ public class MechanumWheelsController extends LinearOpMode {
         while (opModeIsActive()) {
             // Get joystick direction
             double theta = MovementTheta();
+
+            speed = gamepad1.right_bumper ? 0.5f : 1;
 
             // control steering or driving
             if(!Double.isNaN(theta))
@@ -108,6 +135,8 @@ public class MechanumWheelsController extends LinearOpMode {
                 bottomRight.setPower(0);
             }
 
+            SliderMovement();
+
             // Control grabber with right trigger
             float grabberPower = gamepad1.right_trigger;
             leftGrabber.setPosition(grabberPower + leftGOffset);
@@ -119,6 +148,11 @@ public class MechanumWheelsController extends LinearOpMode {
             telemetry.addData("BRP", bottomRight.getPower());
             telemetry.addData("TLP", topLeft.getPower());
             telemetry.addData("BLP", bottomLeft.getPower());
+
+            // Slider telemetry
+            telemetry.addData("Slider Power", slider.getPower());
+            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
+
             telemetry.update();
         }
     }
@@ -143,11 +177,11 @@ public class MechanumWheelsController extends LinearOpMode {
             leftSlantState = MotorState.DISABLED;
 
         // Configure motor power
-        float rightSlantPower = rightSlantState == MotorState.FORWARD ? 1 : -1;
+        float rightSlantPower = rightSlantState == MotorState.FORWARD ? speed : -speed;
         if(rightSlantState == MotorState.DISABLED)
             rightSlantPower = 0;
 
-        float leftSlantPower = leftSlantState == MotorState.FORWARD ? 1 : -1;
+        float leftSlantPower = leftSlantState == MotorState.FORWARD ? speed : -speed;
         if(leftSlantState == MotorState.DISABLED)
             leftSlantPower = 0;
 
@@ -157,8 +191,8 @@ public class MechanumWheelsController extends LinearOpMode {
         // Set power
         topRight.setPower(rightSlantPower);
         bottomLeft.setPower(-rightSlantPower);
-        topLeft.setPower(leftSlantPower);
-        bottomRight.setPower(-leftSlantPower);
+        topLeft.setPower(-leftSlantPower);
+        bottomRight.setPower(leftSlantPower);
     }
 
     void Steer(float theta)
@@ -167,17 +201,29 @@ public class MechanumWheelsController extends LinearOpMode {
         float rightWheelPower = 0;
         if(theta >= 90 && theta <= 270)
         {
-            leftWheelPower = -1;
-            rightWheelPower = 1;
+            leftWheelPower = -speed;
+            rightWheelPower = speed;
         }else {
-            leftWheelPower = 1;
-            rightWheelPower = -1;
+            leftWheelPower = speed;
+            rightWheelPower = -speed;
         }
 
         // Set Power
         topRight.setPower(rightWheelPower);
         bottomRight.setPower(rightWheelPower);
-        topLeft.setPower(leftWheelPower);
-        bottomLeft.setPower(leftWheelPower);
+        topLeft.setPower(-leftWheelPower);
+        bottomLeft.setPower(-leftWheelPower);
+    }
+
+    // Map right-joystick y-axis to slider movement while accounting for limit switches
+    void SliderMovement()
+    {
+        float yPower = this.gamepad1.right_stick_y * sliderSpeed;
+
+        // If pressed, move up until not pressed anymore
+        if(!bottomLimit.isPressed())
+            slider.setPower(yPower);
+        else
+            slider.setPower(0.1f);
     }
 }

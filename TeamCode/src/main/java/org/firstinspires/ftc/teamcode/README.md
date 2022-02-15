@@ -20,3 +20,4 @@ Robot1:
 Robot2:
 - DcMotors (goBuilda) in every port
 - Servos for grabbers in ports 0 and 5
+- DcMotor for slider in expansion hub port 0
