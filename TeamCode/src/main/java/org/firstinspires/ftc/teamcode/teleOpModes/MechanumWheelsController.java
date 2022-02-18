@@ -35,14 +35,14 @@ public class MechanumWheelsController extends LinearOpMode {
     public Servo rightGrabber;
     // Create offset for servos so they can be reset correctly
     public float leftGOffset = 0.12f;
-    public float rightGOffset = 0;
+    public float rightGOffset = 0.22f;
 
     // Touch sensor
     public RevTouchSensor bottomLimit;
 
     // Speed
     public float speed = 1;
-    public float sliderSpeed = 0.7f;
+    public float sliderSpeed = 0.75f;
 
     double MovementTheta()
     {
@@ -93,6 +93,10 @@ public class MechanumWheelsController extends LinearOpMode {
         leftGrabber = hardwareMap.get(Servo.class, "lGrab");
         rightGrabber = hardwareMap.get(Servo.class, "rGrab");
 
+        // Wait for the game to start (driver presses PLAY)
+        waitForStart();
+
+        // Initialize Servos
         leftGrabber.setDirection(Servo.Direction.REVERSE);
         leftGrabber.setPosition(leftGOffset);
         rightGrabber.setPosition(rightGOffset);
@@ -103,58 +107,60 @@ public class MechanumWheelsController extends LinearOpMode {
             telemetry.addData("Status", "Initializing");
             telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
             telemetry.update();
-            slider.setPower(-sliderSpeed);
+            slider.setPower(sliderSpeed);
         }
         slider.setPower(0);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
-
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            // Get joystick direction
-            double theta = MovementTheta();
-
-            speed = gamepad1.right_bumper ? 0.5f : 1;
-
-            // control steering or driving
-            if(!Double.isNaN(theta))
-            {
-                if(gamepad1.left_bumper)
-                    Steer((float) theta);
-                else
-                    Drive((float) theta);
-            }else{
-                // Set power
-                topRight.setPower(0);
-                bottomLeft.setPower(0);
-                topLeft.setPower(0);
-                bottomRight.setPower(0);
-            }
-
-            SliderMovement();
-
-            // Control grabber with right trigger
-            float grabberPower = gamepad1.right_trigger;
-            leftGrabber.setPosition(grabberPower + leftGOffset);
-            rightGrabber.setPosition(grabberPower + rightGOffset);
-            telemetry.addData("Grabber Target", grabberPower);
-
-            // Motor power telemetry
-            telemetry.addData("TRP", topRight.getPower());
-            telemetry.addData("BRP", bottomRight.getPower());
-            telemetry.addData("TLP", topLeft.getPower());
-            telemetry.addData("BLP", bottomLeft.getPower());
-
-            // Slider telemetry
-            telemetry.addData("Slider Power", slider.getPower());
-            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
-
-            telemetry.update();
+            MasterControls();
         }
+    }
+
+    public void MasterControls()
+    {
+        // Get joystick direction
+        double theta = MovementTheta();
+
+        speed = gamepad1.right_bumper ? 0.9f : 0.3f;
+
+        // control steering or driving
+        if(!Double.isNaN(theta))
+        {
+            if(gamepad1.left_bumper)
+                Steer((float) theta);
+            else
+                Drive((float) theta);
+        }else{
+            // Set power
+            topRight.setPower(0);
+            bottomLeft.setPower(0);
+            topLeft.setPower(0);
+            bottomRight.setPower(0);
+        }
+
+        SliderMovement();
+
+        // Control grabber with right trigger
+        float grabberPower = gamepad1.right_trigger;
+        leftGrabber.setPosition(grabberPower + leftGOffset);
+        rightGrabber.setPosition(grabberPower + rightGOffset);
+        telemetry.addData("Grabber Target", grabberPower);
+
+        // Motor power telemetry
+        telemetry.addData("TRP", topRight.getPower());
+        telemetry.addData("BRP", bottomRight.getPower());
+        telemetry.addData("TLP", topLeft.getPower());
+        telemetry.addData("BLP", bottomLeft.getPower());
+
+        // Slider telemetry
+        telemetry.addData("Slider Power", slider.getPower());
+        telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
+
+        telemetry.update();
     }
 
     void Drive(float theta)
@@ -224,6 +230,6 @@ public class MechanumWheelsController extends LinearOpMode {
         if(!bottomLimit.isPressed())
             slider.setPower(yPower);
         else
-            slider.setPower(0.1f);
+            slider.setPower(-0.5f);
     }
 }
