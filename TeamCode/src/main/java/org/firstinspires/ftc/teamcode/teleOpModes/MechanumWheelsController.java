@@ -20,6 +20,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public DcMotor bottomLeft;
     public DcMotor bottomRight;
     public DcMotor slider; // Slider
+    public DcMotor carousel; // Carousel
 
     // Motor states
     public enum MotorState{
@@ -85,6 +86,7 @@ public class MechanumWheelsController extends LinearOpMode {
         bottomLeft = hardwareMap.get(DcMotor.class, "lbMotor");
         bottomRight = hardwareMap.get(DcMotor.class, "rbMotor");
         slider = hardwareMap.get(DcMotor.class, "slider");
+        carousel = hardwareMap.get(DcMotor.class, "carousel");
 
         // Get digital touch sensor
         bottomLimit = hardwareMap.get(RevTouchSensor.class, "bLimit");
@@ -100,6 +102,11 @@ public class MechanumWheelsController extends LinearOpMode {
         leftGrabber.setDirection(Servo.Direction.REVERSE);
         leftGrabber.setPosition(leftGOffset);
         rightGrabber.setPosition(rightGOffset);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Initialize slider at bottom
         while(!bottomLimit.isPressed())
@@ -115,55 +122,55 @@ public class MechanumWheelsController extends LinearOpMode {
         telemetry.update();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        while (opModeIsActive())
             MasterControls();
-        }
     }
 
     public void MasterControls()
     {
-        // Get joystick direction
-        double theta = MovementTheta();
+            // Get joystick direction
+            double theta = MovementTheta();
 
-        speed = gamepad1.right_bumper ? 0.9f : 0.3f;
+            speed = gamepad1.right_bumper ? 1f : 0.4f;
 
-        // control steering or driving
-        if(!Double.isNaN(theta))
-        {
-            if(gamepad1.left_bumper)
-                Steer((float) theta);
-            else
-                Drive((float) theta);
-        }else{
-            // Set power
-            topRight.setPower(0);
-            bottomLeft.setPower(0);
-            topLeft.setPower(0);
-            bottomRight.setPower(0);
-        }
+            // control steering or driving
+            if(!Double.isNaN(theta))
+            {
+                if(gamepad1.left_bumper)
+                    Steer((float) theta);
+                else
+                    Drive((float) theta);
+            }else{
+                // Set power
+                topRight.setPower(0);
+                bottomLeft.setPower(0);
+                topLeft.setPower(0);
+                bottomRight.setPower(0);
+            }
 
-        SliderMovement();
+            SliderMovement();
+            ControlCarousel();
 
-        // Control grabber with right trigger
-        float grabberPower = gamepad1.right_trigger;
-        leftGrabber.setPosition(grabberPower + leftGOffset);
-        rightGrabber.setPosition(grabberPower + rightGOffset);
-        telemetry.addData("Grabber Target", grabberPower);
+            // Control grabber with right trigger
+            float grabberPower = gamepad2.right_trigger;
+            leftGrabber.setPosition(Math.max(Math.min(grabberPower + leftGOffset, 0.4f), leftGOffset));
+            rightGrabber.setPosition(Math.max(Math.min(grabberPower + rightGOffset, 0.4f), rightGOffset));
+            telemetry.addData("Grabber Target", grabberPower);
 
-        // Motor power telemetry
-        telemetry.addData("TRP", topRight.getPower());
-        telemetry.addData("BRP", bottomRight.getPower());
-        telemetry.addData("TLP", topLeft.getPower());
-        telemetry.addData("BLP", bottomLeft.getPower());
+            // Motor power telemetry
+            telemetry.addData("TRP", topRight.getPower());
+            telemetry.addData("BRP", bottomRight.getPower());
+            telemetry.addData("TLP", topLeft.getPower());
+            telemetry.addData("BLP", bottomLeft.getPower());
 
-        // Slider telemetry
-        telemetry.addData("Slider Power", slider.getPower());
-        telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
+            // Slider telemetry
+            telemetry.addData("Slider Power", slider.getPower());
+            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
 
-        telemetry.update();
+            telemetry.update();
     }
 
-    void Drive(float theta)
+    public void Drive(float theta)
     {
         // Configure slant states
         // Right slant
@@ -181,6 +188,13 @@ public class MechanumWheelsController extends LinearOpMode {
             leftSlantState = MotorState.BACKWARD;
         else
             leftSlantState = MotorState.DISABLED;
+
+        // Lazy, but I got to do it
+        if(Math.round(theta / 10) == 0)
+        {
+            leftSlantState = MotorState.FORWARD;
+            rightSlantState = MotorState.BACKWARD;
+        }
 
         // Configure motor power
         float rightSlantPower = rightSlantState == MotorState.FORWARD ? speed : -speed;
@@ -201,7 +215,7 @@ public class MechanumWheelsController extends LinearOpMode {
         bottomRight.setPower(leftSlantPower);
     }
 
-    void Steer(float theta)
+    public void Steer(float theta)
     {
         float leftWheelPower = 0;
         float rightWheelPower = 0;
@@ -215,21 +229,63 @@ public class MechanumWheelsController extends LinearOpMode {
         }
 
         // Set Power
+        bottomLeft.setPower(-leftWheelPower);
         topRight.setPower(rightWheelPower);
         bottomRight.setPower(rightWheelPower);
         topLeft.setPower(-leftWheelPower);
-        bottomLeft.setPower(-leftWheelPower);
     }
 
     // Map right-joystick y-axis to slider movement while accounting for limit switches
     void SliderMovement()
     {
-        float yPower = this.gamepad1.right_stick_y * sliderSpeed;
+        float yPower = this.gamepad2.right_stick_y * sliderSpeed;
 
         // If pressed, move up until not pressed anymore
         if(!bottomLimit.isPressed())
             slider.setPower(yPower);
         else
             slider.setPower(-0.5f);
+    }
+
+    boolean isCarouselActive = false;
+    float carouselPower = 0.75f;
+
+    boolean canChangeActive = true;
+    boolean canChangeDirection = true;
+    public void ControlCarousel()
+    {
+        // Use Y button to toggle carousel
+        if(this.gamepad2.y){
+            if(canChangeActive)
+            {
+                isCarouselActive = !isCarouselActive;
+                canChangeActive = false;
+            }
+        }else{
+            canChangeActive = true;
+        }
+
+        // Reverse motor direction with B button just in case
+        if(this.gamepad2.b){
+            if(canChangeDirection)
+            {
+                carouselPower *= -1;
+                canChangeDirection = false;
+            }
+        }else{
+            canChangeDirection = true;
+        }
+
+        // Set power to the motor
+        if(isCarouselActive)
+        {
+            carousel.setPower(carouselPower);
+        }else{
+            carousel.setPower(0);
+        }
+
+        // Add telemetry
+        telemetry.addData("Carousel", isCarouselActive);
+        telemetry.addData("Carousel Power", carousel.getPower());
     }
 }
