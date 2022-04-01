@@ -109,14 +109,14 @@ public class MechanumWheelsController extends LinearOpMode {
         }
 
         // Initialize slider at bottom
-        while(!bottomLimit.isPressed())
-        {
-            telemetry.addData("Status", "Initializing");
-            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
-            telemetry.update();
-            slider.setPower(sliderSpeed);
-        }
-        slider.setPower(0);
+//        while(!bottomLimit.isPressed())
+//        {
+//            telemetry.addData("Status", "Initializing");
+//            telemetry.addData("Bottom Limit Status", bottomLimit.isPressed());
+//            telemetry.update();
+//            slider.setPower(sliderSpeed);
+//        }
+//        slider.setPower(0);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -152,7 +152,7 @@ public class MechanumWheelsController extends LinearOpMode {
             ControlCarousel();
 
             // Control grabber with right trigger
-            float grabberPower = gamepad2.right_trigger;
+            float grabberPower = gamepad1.right_trigger;
             leftGrabber.setPosition(Math.max(Math.min(grabberPower + leftGOffset, 0.4f), leftGOffset));
             rightGrabber.setPosition(Math.max(Math.min(grabberPower + rightGOffset, 0.4f), rightGOffset));
             telemetry.addData("Grabber Target", grabberPower);
@@ -238,7 +238,7 @@ public class MechanumWheelsController extends LinearOpMode {
     // Map right-joystick y-axis to slider movement while accounting for limit switches
     void SliderMovement()
     {
-        float yPower = this.gamepad2.right_stick_y * sliderSpeed;
+        float yPower = this.gamepad1.right_stick_y * sliderSpeed;
 
         // If pressed, move up until not pressed anymore
         if(!bottomLimit.isPressed())
@@ -255,7 +255,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public void ControlCarousel()
     {
         // Use Y button to toggle carousel
-        if(this.gamepad2.y){
+        if(this.gamepad1.y){
             if(canChangeActive)
             {
                 isCarouselActive = !isCarouselActive;
@@ -266,7 +266,7 @@ public class MechanumWheelsController extends LinearOpMode {
         }
 
         // Reverse motor direction with B button just in case
-        if(this.gamepad2.b){
+        if(this.gamepad1.b){
             if(canChangeDirection)
             {
                 carouselPower *= -1;
