@@ -35,8 +35,8 @@ public class MechanumWheelsController extends LinearOpMode {
     public Servo leftGrabber;
     public Servo rightGrabber;
     // Create offset for servos so they can be reset correctly
-    public float leftGOffset = 0.12f;
-    public float rightGOffset = 0.22f;
+    public float leftGOffset = 0.1f;
+    public float rightGOffset = 0.1f;
 
     // Touch sensor
     public RevTouchSensor bottomLimit;
@@ -99,7 +99,7 @@ public class MechanumWheelsController extends LinearOpMode {
         waitForStart();
 
         // Initialize Servos
-        leftGrabber.setDirection(Servo.Direction.REVERSE);
+        rightGrabber.setDirection(Servo.Direction.REVERSE);
         leftGrabber.setPosition(leftGOffset);
         rightGrabber.setPosition(rightGOffset);
         try {
