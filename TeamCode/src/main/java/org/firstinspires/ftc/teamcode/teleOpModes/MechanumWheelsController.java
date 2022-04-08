@@ -35,7 +35,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public Servo leftGrabber;
     public Servo rightGrabber;
     // Create offset for servos so they can be reset correctly
-    public float leftGOffset = 0.1f;
+    public float leftGOffset = 0.5f;
     public float rightGOffset = 0.1f;
 
     // Touch sensor
@@ -153,8 +153,8 @@ public class MechanumWheelsController extends LinearOpMode {
 
             // Control grabber with right trigger
             float grabberPower = gamepad1.right_trigger;
-            leftGrabber.setPosition(Math.max(Math.min(grabberPower + leftGOffset, 0.4f), leftGOffset));
-            rightGrabber.setPosition(Math.max(Math.min(grabberPower + rightGOffset, 0.4f), rightGOffset));
+            leftGrabber.setPosition(Math.min(grabberPower + leftGOffset, 0.9f));
+            rightGrabber.setPosition(Math.min(grabberPower + rightGOffset, 0.9f));
             telemetry.addData("Grabber Target", grabberPower);
 
             // Motor power telemetry
