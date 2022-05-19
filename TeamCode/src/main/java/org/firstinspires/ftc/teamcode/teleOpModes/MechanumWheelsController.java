@@ -35,8 +35,7 @@ public class MechanumWheelsController extends LinearOpMode {
     public Servo leftGrabber;
     public Servo rightGrabber;
     // Create offset for servos so they can be reset correctly
-    public float leftGOffset = 0.5f;
-    public float rightGOffset = 0.1f;
+    public float GOffset = 0.75f;
 
     // Touch sensor
     public RevTouchSensor bottomLimit;
@@ -99,9 +98,10 @@ public class MechanumWheelsController extends LinearOpMode {
         waitForStart();
 
         // Initialize Servos
-        rightGrabber.setDirection(Servo.Direction.REVERSE);
-        leftGrabber.setPosition(leftGOffset);
-        rightGrabber.setPosition(rightGOffset);
+        leftGrabber.setDirection(Servo.Direction.REVERSE);
+        leftGrabber.setPosition(GOffset);
+        rightGrabber.setPosition(GOffset);
+
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -153,8 +153,8 @@ public class MechanumWheelsController extends LinearOpMode {
 
             // Control grabber with right trigger
             float grabberPower = gamepad1.right_trigger;
-            leftGrabber.setPosition(Math.min(grabberPower + leftGOffset, 0.9f));
-            rightGrabber.setPosition(Math.min(grabberPower + rightGOffset, 0.9f));
+            leftGrabber.setPosition(Math.min(grabberPower, 1f));
+            rightGrabber.setPosition(Math.min(grabberPower, 1f));
             telemetry.addData("Grabber Target", grabberPower);
 
             // Motor power telemetry
